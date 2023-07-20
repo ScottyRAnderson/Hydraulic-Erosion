@@ -12,7 +12,8 @@ public class HydraulicManager_Inspector : Editor
     private Editor shadingDataEditor;
 
     private SerializedProperty seed;
-    private SerializedProperty mapDensityIndex;
+    private SerializedProperty mapSize;
+    private SerializedProperty mapDensity;
     private SerializedProperty debugEditorInstance;
     private SerializedProperty drawVertexGizmos;
     private SerializedProperty gizmoColor;
@@ -24,7 +25,8 @@ public class HydraulicManager_Inspector : Editor
     {
         serializedObject.Update();
         seed = serializedObject.FindProperty("seed");
-        mapDensityIndex = serializedObject.FindProperty("mapDensityIndex");
+        mapSize = serializedObject.FindProperty("mapSize");
+        mapDensity = serializedObject.FindProperty("mapDensity");
         debugEditorInstance = serializedObject.FindProperty("debugEditorInstance");
         drawVertexGizmos = serializedObject.FindProperty("drawVertexGizmos");
         gizmoColor = serializedObject.FindProperty("gizmoColor");
@@ -77,7 +79,23 @@ public class HydraulicManager_Inspector : Editor
                 return false;
             }
 
-            EditorGUILayout.PropertyField(mapDensityIndex);
+            EditorGUILayout.PropertyField(mapSize);
+            EditorGUILayout.PropertyField(mapDensity);
+
+            GUI.enabled = false;
+            int numVerts = (int)Mathf.Pow(managerBase.NumVertsPerLine, 2);
+            bool vertexLimitReached = numVerts > 65535;
+            EditorGUILayout.LabelField("Vertex Count: " + Mathf.Pow(managerBase.NumVertsPerLine, 2), EditorStyles.boldLabel);
+            GUI.enabled = true;
+
+            if (vertexLimitReached)
+            {
+                GUIStyle style = new GUIStyle(EditorStyles.boldLabel);
+                style.normal.textColor = Color.red;
+                EditorGUILayout.LabelField("Max vertex limit reached. Reduce Map Size or Map Density!", style);
+            }
+
+            EditorHelper.Space();
 
             using (new GUILayout.HorizontalScope())
             {
@@ -90,9 +108,11 @@ public class HydraulicManager_Inspector : Editor
                     seed.intValue = (int)Random.Range(-10000f, 10000f);
                 }
 
+                GUI.enabled = !vertexLimitReached;
                 if (GUILayout.Button("Generate Terrain")){
                     managerBase.CreateEditorInstance();
                 }
+                GUI.enabled = true;
             }
         }
         return true;

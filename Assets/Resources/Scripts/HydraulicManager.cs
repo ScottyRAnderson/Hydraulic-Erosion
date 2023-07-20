@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class HydraulicManager : MonoBehaviour
 {
+    private const int baseMapDensityDivisor = 8; // Must be divisible by 4
     private const int MapPreviewComputeScale = 50;
     private const int MapPreviewRenderScale = 150;
 
@@ -16,7 +17,9 @@ public class HydraulicManager : MonoBehaviour
     [SerializeField]
     private int seed;
     [SerializeField]
-    private int mapDensityIndex;
+    private MapSize mapSize = MapSize._256;
+    [SerializeField][Range(1, 10)]
+    private int mapDensity;
     [SerializeField]
     private bool debugEditorInstance;
     [SerializeField]
@@ -49,6 +52,14 @@ public class HydraulicManager : MonoBehaviour
     private HeightMap heightMap;
     private  GameObject editorInstance;
 
+    public int NumVertsPerLine { get { return (int)((float)mapSize / baseMapDensityDivisor) * mapDensity; } }
+    public float VertexSpacing { 
+        get {
+            float spacing = ((float)mapSize / NumVertsPerLine);
+            return spacing + ((spacing / NumVertsPerLine) * (1 - mapDensity)); 
+        } 
+    }
+
     #if UNITY_EDITOR
     public void OnValidate(){
         UnityEditor.EditorApplication.update += NotifyOfUpdatedValues;
@@ -69,16 +80,18 @@ public class HydraulicManager : MonoBehaviour
             UpdateHeightMapPreview();
         }
         UpdateEditorInstanceFlags();
+
+        gizmoScale = Mathf.Max(gizmoScale, 0f);
     }
     #endif
 
     private HeightMap GenerateHeightMap(int seed = 0) {
-        return HydraulicHelper.GenerateTerrainHeightMap(mapDensityIndex, heightMapData, seed);
+        return HydraulicHelper.GenerateTerrainHeightMap(NumVertsPerLine, VertexSpacing, mapSize, heightMapData, seed);
     }
 
     private Texture2D GenerateHeightMapSampleTexture()
     {
-        HeightMap HeightMap = HydraulicHelper.GenerateNoiseMap(MapPreviewComputeScale, heightMapData, heightMapPreviewSeed, heightMapPreviewMode == HeightMapPreviewMode.BaseNoise);
+        HeightMap HeightMap = HydraulicHelper.GenerateTerrainHeightMap(MapPreviewComputeScale, heightMapData, heightMapPreviewMode, heightMapPreviewSeed);
         return HydraulicHelper.TextureFromHeightMap(HeightMap);
     }
 
@@ -94,30 +107,35 @@ public class HydraulicManager : MonoBehaviour
     private Mesh GenerateTerrainMesh(int seed = 0)
     {
         heightMap = GenerateHeightMap(seed);
+        heightMap = HydraulicHelper.GenerateErosionMap(heightMap);
 
-        int mapScale = heightMap.mapScale;
-        Vector3[] vertices = new Vector3[mapScale * mapScale];
-        int[] triangles = new int[mapScale * mapScale * 6];
+        int numVerts = heightMap.mapScale;
+        Vector3[] vertices = new Vector3[numVerts * numVerts];
+        int[] triangles = new int[vertices.Length * 6];
+        Vector2[] uv = new Vector2[vertices.Length];
 
         int vertexIndex = 0;
         int triangleIndex = 0;
 
-        for (int x = 0; x < mapScale; x++)
+        float spacing = VertexSpacing;
+        Vector3 offset = new Vector3(-(float)mapSize / 2, 0, -(float)mapSize / 2) + transform.position;
+        for (int x = 0; x < numVerts; x++)
         {
-            for (int y = 0; y < mapScale; y++)
+            for (int y = 0; y < numVerts; y++)
             {
                 float height = heightMap.heightValues[x, y];
-                vertices[vertexIndex] = new Vector3(x, height, y);
+                vertices[vertexIndex] = new Vector3((float)x * spacing, height, (float)y * spacing) + offset;
+                uv[vertexIndex] = new Vector2((float)x / numVerts, (float)y / numVerts);
 
-                bool createTriangle = x < mapScale - 1 && y < mapScale - 1;
+                bool createTriangle = x < numVerts - 1 && y < numVerts - 1;
                 if (createTriangle)
                 {
                     triangles[triangleIndex] = vertexIndex + 0;
                     triangles[triangleIndex + 1] = vertexIndex + 1;
-                    triangles[triangleIndex + 2] = vertexIndex + mapScale;
-                    triangles[triangleIndex + 3] = vertexIndex + mapScale;
+                    triangles[triangleIndex + 2] = vertexIndex + numVerts;
+                    triangles[triangleIndex + 3] = vertexIndex + numVerts;
                     triangles[triangleIndex + 4] = vertexIndex + 1;
-                    triangles[triangleIndex + 5] = vertexIndex + mapScale + 1;
+                    triangles[triangleIndex + 5] = vertexIndex + numVerts + 1;
                     triangleIndex += 6;
                 }
                 vertexIndex++;
@@ -127,23 +145,12 @@ public class HydraulicManager : MonoBehaviour
         Mesh mesh = new Mesh();
         mesh.vertices = vertices;
         mesh.triangles = triangles;
+        mesh.uv = uv;
         mesh.RecalculateBounds();
         mesh.RecalculateNormals();
         mesh.RecalculateTangents();
         return mesh;
     }
-
-    private void OnDrawGizmos () {
-        if (!drawVertexGizmos || editorInstance == null) {
-            return;
-        }
-
-        Gizmos.color = gizmoColor;
-        Vector3[] vertices = editorInstance.GetComponent<MeshFilter>().sharedMesh.vertices;
-		for (int i = 0; i < vertices.Length; i++) {
-			Gizmos.DrawSphere(vertices[i], gizmoScale);
-		}
-	}
 
     public void CreateEditorInstance()
     {
@@ -158,7 +165,6 @@ public class HydraulicManager : MonoBehaviour
 
         MeshFilter.sharedMesh = terrainMesh;
         MeshRenderer.material = shadingData != null ? shadingData.MeshMaterial : new Material(Shader.Find("Mobile/Unlit (Supports Lightmap)"));
-        //editorInstance.transform.localScale = Vector3.one * ((int)MapSize / 10);
     }
 
     private void UpdateEditorInstanceFlags()
@@ -182,6 +188,18 @@ public class HydraulicManager : MonoBehaviour
             else {
                 DestroyImmediate(editorInstance);
             }
+        }
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (!drawVertexGizmos || editorInstance == null) {
+            return;
+        }
+        Gizmos.color = gizmoColor;
+        Vector3[] vertices = editorInstance.GetComponent<MeshFilter>().sharedMesh.vertices;
+        for (int i = 0; i < vertices.Length; i++) {
+            Gizmos.DrawSphere(vertices[i], gizmoScale);
         }
     }
 }

@@ -12,13 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2b140c130e10bf409428ee62a21fe65, type: 3}
   m_Name: HeightMapData
   m_EditorClassIdentifier: 
-  TerrainBaseHeight: 0
   NoiseLayers:
   - Enabled: 1
     NoiseFunction: 0
-    NoiseScale: 30
+    NoiseScale: 50
     Octaves: 6
     Persistance: 0.2
-    Lacunarity: 3
+    Lacunarity: 4
     Gain: 1
-    HeightScalar: 10
+    HeightScalar: 20

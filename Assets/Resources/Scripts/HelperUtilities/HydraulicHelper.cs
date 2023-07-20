@@ -4,15 +4,22 @@ using UnityEngine;
 
 public static class HydraulicHelper
 {
-    public static HeightMap GenerateTerrainHeightMap(int MapScale, HeightMapData HeightMapSettings, int Seed = 0)
+    // Applies an erosion algorithm to a supplied HeightMap object
+    public static HeightMap GenerateErosionMap(HeightMap heightMap)
+    {
+		
+		return heightMap;
+    }
+
+    public static HeightMap GenerateTerrainHeightMap(int vertsPerLine, float vertexSpacing, MapSize mapSize, HeightMapData HeightMapSettings, int Seed = 0)
 	{
-		float[,] HeightValues = NoiseHelper.GenerateNoiseMap(MapScale, HeightMapSettings, Seed);
+		float[,] HeightValues = NoiseHelper.GenerateNoiseMap(vertsPerLine, vertexSpacing, mapSize, HeightMapSettings, Seed);
 		return new HeightMap(HeightValues);
 	}
 
-	public static HeightMap GenerateNoiseMap(int MapScale, HeightMapData HeightMapSettings, int Seed = 0, bool BaseNoiseOnly = false)
+	public static HeightMap GenerateTerrainHeightMap(int vertsPerLine, HeightMapData HeightMapSettings, HydraulicManager.HeightMapPreviewMode previewMode, int Seed = 0)
 	{
-		float[,] HeightValues = NoiseHelper.GenerateNoiseMap(MapScale, HeightMapSettings, Seed, BaseNoiseOnly);
+		float[,] HeightValues = NoiseHelper.GenerateNoiseMap(vertsPerLine, 1, MapSize._64, HeightMapSettings, Seed, previewMode == HydraulicManager.HeightMapPreviewMode.BaseNoise);
 		return new HeightMap(HeightValues);
 	}
 

@@ -4,9 +4,9 @@ using UnityEngine;
 
 public static class NoiseHelper
 {
-    public static float[,] GenerateNoiseMap(int mapScale, HeightMapData heightMapData, int seed = 0, bool isolateBase = false)
+    public static float[,] GenerateNoiseMap(int vertsPerLine, float vertexSpacing, MapSize mapSize, HeightMapData heightMapData, int seed = 0, bool isolateBase = false)
 	{
-		float[,] noiseMap = new float[mapScale, mapScale];
+		float[,] noiseMap = new float[vertsPerLine, vertsPerLine];
 
 		System.Random RNG = new System.Random(seed);
 		NoiseOctave[] noiseOctaves = new NoiseOctave[heightMapData.noiseLayers.Length];
@@ -26,14 +26,13 @@ public static class NoiseHelper
 			}
 		}
 
-		float halfScale = mapScale / 2f;
-		for (int y = 0; y < mapScale; y++)
+		for (int y = 0; y < vertsPerLine; y++)
         {
-            for (int x = 0; x < mapScale; x++)
+            for (int x = 0; x < vertsPerLine; x++)
             {
-				float sampleX = x - halfScale;
-				float sampleY = y - halfScale;
-				float heightSum = heightMapData.terrainBaseHeight;
+				float sampleX = (x * vertexSpacing) - ((float)mapSize / 2);
+				float sampleY = (y * vertexSpacing) - ((float)mapSize / 2);
+				float heightSum = 0f;
 				if(isolateBase)
                 {
 					for (int i = 0; i < heightMapData.noiseLayers.Length; i++)
