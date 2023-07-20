@@ -8,10 +8,10 @@ public struct HeightMap
 
 	public int mapScale { get { return heightValues.GetLength(0); } }
 
-	public HeightMap(float[,] HeightValues, bool ComputeMinMaxHeights = true)
+	public HeightMap(float[,] heightValues, bool computeMinMaxHeights = true)
 	{
-		this.heightValues = HeightValues;
-		if(ComputeMinMaxHeights)
+		this.heightValues = heightValues;
+		if(computeMinMaxHeights)
         {
 			float maxHeight = Mathf.NegativeInfinity;
 			float minHeight = Mathf.Infinity;
@@ -19,11 +19,11 @@ public struct HeightMap
 			{
 				for (int j = 0; j < this.heightValues.GetLength(0); j++)
 				{
-					if (HeightValues[i, j] > maxHeight){
-						maxHeight = HeightValues[i, j];
+					if (heightValues[i, j] > maxHeight){
+						maxHeight = heightValues[i, j];
 					}
-					if (HeightValues[i, j] < minHeight){
-						minHeight = HeightValues[i, j];
+					if (heightValues[i, j] < minHeight){
+						minHeight = heightValues[i, j];
 					}
 				}
 			}

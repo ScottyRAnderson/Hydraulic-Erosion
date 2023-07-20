@@ -9,16 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d2b140c130e10bf409428ee62a21fe65, type: 3}
-  m_Name: HeightMapData
+  m_Script: {fileID: 11500000, guid: 25b1d3f7db894824f93d9a03e50fc1e7, type: 3}
+  m_Name: ShadingData
   m_EditorClassIdentifier: 
-  TerrainBaseHeight: 0
-  NoiseLayers:
-  - Enabled: 1
-    NoiseFunction: 0
-    NoiseScale: 30
-    Octaves: 6
-    Persistance: 0.2
-    Lacunarity: 3
-    Gain: 1
-    HeightScalar: 10
+  meshMaterial: {fileID: 2100000, guid: 19a4f9cb49b103c44972ea37e06646c6, type: 2}

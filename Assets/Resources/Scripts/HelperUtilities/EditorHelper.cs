@@ -234,5 +234,9 @@ public static class EditorHelper
         }
         return rects;
     }
+
+    public static void Space(float space = 5f) {
+        GUILayout.Space(5f);
+    }
 }
 #endif
