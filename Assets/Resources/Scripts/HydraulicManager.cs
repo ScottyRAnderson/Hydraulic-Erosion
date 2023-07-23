@@ -18,7 +18,7 @@ public class HydraulicManager : MonoBehaviour
     private int seed;
     [SerializeField]
     private MapSize mapSize = MapSize._256;
-    [SerializeField][Range(1, 10)]
+    [SerializeField][Range(1, 100)]
     private int mapDensity;
     [SerializeField]
     private bool debugEditorInstance;
@@ -30,6 +30,7 @@ public class HydraulicManager : MonoBehaviour
     private float gizmoScale = 0.1f;
 
     public HeightMapData heightMapData;
+    public HydraulicData hydraulicData;
     public ShadingData shadingData;
 
     [SerializeField]
@@ -59,6 +60,7 @@ public class HydraulicManager : MonoBehaviour
             return spacing + ((spacing / NumVertsPerLine) * (1 - mapDensity)); 
         } 
     }
+    public Vector3 MapOffset { get { return new Vector3(-(float)mapSize / 2, 0, -(float)mapSize / 2) + transform.position; } }
 
     #if UNITY_EDITOR
     public void OnValidate(){
@@ -85,6 +87,36 @@ public class HydraulicManager : MonoBehaviour
     }
     #endif
 
+    private HeightMap GenerateErosionMap(HeightMap heightMap)
+    {
+        int numVerts = heightMap.mapScale;
+        float spacing = VertexSpacing;
+        Vector3 offset = MapOffset;
+
+        // Generate random droplet starting positions across the map
+        Vector2[] dropletPositions = new Vector2[hydraulicData.DropletCount];
+        for (int i = 0; i < dropletPositions.Length; i++) {
+            float x = Random.Range(0f, numVerts); //50
+            float y = Random.Range(0f, numVerts);
+            //dropletPositions[i] = new Vector2((float)x * spacing, (float)y * spacing) + new Vector2(offset.x, offset.z);
+            dropletPositions[i] = new Vector2(x, y);
+        }
+
+        //Vector2[] gridPositions = new Vector2[numVerts * numVerts];
+        //int gridIndex = 0;
+        //for (int x = 0; x < numVerts; x++)
+        //{
+        //    for (int y = 0; y < numVerts; y++)
+        //    {
+        //        float height = heightMap.heightValues[x, y];
+        //        gridPositions[gridIndex] = new Vector3((float)x * spacing, height, (float)y * spacing) + offset;
+        //        gridIndex++;
+        //    }
+        //}
+
+        return HydraulicHelper.GenerateErosionMap(heightMap, dropletPositions, hydraulicData);
+    }
+
     private HeightMap GenerateHeightMap(int seed = 0) {
         return HydraulicHelper.GenerateTerrainHeightMap(NumVertsPerLine, VertexSpacing, mapSize, heightMapData, seed);
     }
@@ -107,7 +139,7 @@ public class HydraulicManager : MonoBehaviour
     private Mesh GenerateTerrainMesh(int seed = 0)
     {
         heightMap = GenerateHeightMap(seed);
-        heightMap = HydraulicHelper.GenerateErosionMap(heightMap);
+        heightMap = GenerateErosionMap(heightMap);
 
         int numVerts = heightMap.mapScale;
         Vector3[] vertices = new Vector3[numVerts * numVerts];
@@ -118,7 +150,7 @@ public class HydraulicManager : MonoBehaviour
         int triangleIndex = 0;
 
         float spacing = VertexSpacing;
-        Vector3 offset = new Vector3(-(float)mapSize / 2, 0, -(float)mapSize / 2) + transform.position;
+        Vector3 offset = MapOffset;
         for (int x = 0; x < numVerts; x++)
         {
             for (int y = 0; y < numVerts; y++)

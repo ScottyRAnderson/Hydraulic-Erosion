@@ -15,9 +15,9 @@ MonoBehaviour:
   NoiseLayers:
   - Enabled: 1
     NoiseFunction: 0
-    NoiseScale: 50
+    NoiseScale: 12
     Octaves: 6
     Persistance: 0.2
-    Lacunarity: 4
+    Lacunarity: 3
     Gain: 1
-    HeightScalar: 20
+    HeightScalar: 5

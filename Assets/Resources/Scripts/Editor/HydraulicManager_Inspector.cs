@@ -9,6 +9,7 @@ public class HydraulicManager_Inspector : Editor
 {
     private HydraulicManager managerBase;
     private Editor heightMapDataEditor;
+    private Editor hydraulicDataEditor;
     private Editor shadingDataEditor;
 
     private SerializedProperty seed;
@@ -41,6 +42,9 @@ public class HydraulicManager_Inspector : Editor
         Undo.RecordObject(managerBase, "Hydraulic manager values changed");
         if (managerBase.heightMapData != null) {
             Undo.RecordObject(managerBase.heightMapData, "Heightmap data values changed");
+        }
+        if (managerBase.hydraulicData != null) {
+            Undo.RecordObject(managerBase.hydraulicData, "Hydraulic data values changed");
         }
         if (managerBase.shadingData != null) {
             Undo.RecordObject(managerBase.shadingData, "Shading data values changed");
@@ -181,7 +185,30 @@ public class HydraulicManager_Inspector : Editor
             managerBase.drawHydraulicData = EditorHelper.Foldout(managerBase.drawHydraulicData, "Hydraulic Data", -(EditorGUIUtility.singleLineHeight / 2), 0f);
             if (managerBase.drawHydraulicData)
             {
+                EditorGUI.indentLevel++;
+                HydraulicData hydraulicData = managerBase.hydraulicData;
+                using (var check = new EditorGUI.ChangeCheckScope())
+                {
+                    hydraulicData = (HydraulicData)EditorGUILayout.ObjectField(hydraulicData, typeof(HydraulicData), true);
+                    if (check.changed) {
+                        managerBase.hydraulicData = hydraulicData;
+                    }
+                }
 
+                if (managerBase.hydraulicData == null)
+                {
+                    EditorGUILayout.LabelField("A valid HydraulicData object is required!", EditorStyles.boldLabel);
+                    EditorGUI.indentLevel -= 2;
+                    return;
+                }
+
+                CreateCachedEditor(managerBase.hydraulicData, null, ref hydraulicDataEditor);
+                hydraulicDataEditor.OnInspectorGUI();
+
+                if (GUI.changed) {
+                    EditorUtility.SetDirty(managerBase.hydraulicData);
+                }
+                EditorGUI.indentLevel--;
             }
             EditorGUI.indentLevel--;
         }
@@ -213,11 +240,11 @@ public class HydraulicManager_Inspector : Editor
 
                 CreateCachedEditor(managerBase.shadingData, null, ref shadingDataEditor);
                 shadingDataEditor.OnInspectorGUI();
-                EditorGUI.indentLevel--;
 
                 if (GUI.changed) {
                     EditorUtility.SetDirty(managerBase.shadingData);
                 }
+                EditorGUI.indentLevel--;
             }
             EditorGUI.indentLevel--;
         }
