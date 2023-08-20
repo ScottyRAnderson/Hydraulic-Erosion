@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5922ac6ca3c2cc34a8f939296dc7f19d, type: 3}
   m_Name: HydraulicData
   m_EditorClassIdentifier: 
-  dropletCount: 1000
-  maxSteps: 64
+  dropletCount: 70000
+  maxSteps: 30
   gravity: 9.8
-  intertia: 0.3
-  carryCapacity: 8
-  depositionRate: 0.2
-  erosionRate: 0.7
-  evaporationRate: 0.02
-  erosionRadius: 2
-  minSlope: 0.01
+  inertia: 0.05
+  carryCapacity: 4
+  depositionRate: 0.3
+  erosionRate: 0.3
+  evaporationRate: 0.01
+  erosionRadius: 3
+  minSlope: 0

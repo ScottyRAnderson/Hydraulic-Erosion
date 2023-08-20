@@ -95,9 +95,10 @@ public class HydraulicManager : MonoBehaviour
 
         // Generate random droplet starting positions across the map
         Vector2[] dropletPositions = new Vector2[hydraulicData.DropletCount];
+        System.Random RNG = new System.Random(seed);
         for (int i = 0; i < dropletPositions.Length; i++) {
-            float x = Random.Range(0f, numVerts); //50
-            float y = Random.Range(0f, numVerts);
+            float x = RNG.Next(0, numVerts - 1);
+            float y = RNG.Next(0, numVerts - 1);
             //dropletPositions[i] = new Vector2((float)x * spacing, (float)y * spacing) + new Vector2(offset.x, offset.z);
             dropletPositions[i] = new Vector2(x, y);
         }
@@ -155,7 +156,7 @@ public class HydraulicManager : MonoBehaviour
         {
             for (int y = 0; y < numVerts; y++)
             {
-                float height = heightMap.heightValues[x, y];
+                float height = heightMap.heightValues[x, y] * heightMapData.HeightScalar;
                 vertices[vertexIndex] = new Vector3((float)x * spacing, height, (float)y * spacing) + offset;
                 uv[vertexIndex] = new Vector2((float)x / numVerts, (float)y / numVerts);
 

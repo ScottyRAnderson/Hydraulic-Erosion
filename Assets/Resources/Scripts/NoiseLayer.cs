@@ -22,8 +22,6 @@ public class NoiseLayer
     private float Lacunarity = 1f;
     [SerializeField][Tooltip("How quickly the noise converges.")]
     private float Gain = 1f;
-    [SerializeField][Tooltip("Multiplies the overall height by the specified amount.")]
-    private float HeightScalar = 1f;
     public bool enabled { get { return Enabled; } }
     public NoiseFunction noiseFunction { get { return NoiseFunction; } }
     public float noiseScale { get { return NoiseScale; } }
@@ -31,14 +29,12 @@ public class NoiseLayer
     public float persistance { get { return Persistance; } }
     public float lacunarity { get { return Lacunarity; } }
     public float gain { get { return Gain; } }
-    public float heightScalar { get { return HeightScalar; } }
 
     public void ValidateConfig()
     {
         NoiseScale = Mathf.Max(NoiseScale, 0.0001f);
         Lacunarity = Mathf.Max(Lacunarity, 1f);
         Gain = Mathf.Max(Gain, 1f);
-        HeightScalar = Mathf.Max(HeightScalar, 0f);
     }
 
     public NoiseLayer(NoiseLayer NoiseLayer)
@@ -50,10 +46,9 @@ public class NoiseLayer
         Persistance = NoiseLayer.Persistance;
         Lacunarity = NoiseLayer.Lacunarity;
         Gain = NoiseLayer.Gain;
-        HeightScalar = NoiseLayer.HeightScalar;
     }
 
-    public NoiseLayer(bool Enabled, NoiseFunction NoiseFunction, float NoiseScale, int Octaves, float Persistance, float Lacunarity, float Gain, float HeightScalar)
+    public NoiseLayer(bool Enabled, NoiseFunction NoiseFunction, float NoiseScale, int Octaves, float Persistance, float Lacunarity, float Gain)
     {
         this.Enabled = Enabled;
         this.NoiseFunction = NoiseFunction;
@@ -62,7 +57,6 @@ public class NoiseLayer
         this.Persistance = Persistance;
         this.Lacunarity = Lacunarity;
         this.Gain = Gain;
-        this.HeightScalar = HeightScalar;
     }
 }
 

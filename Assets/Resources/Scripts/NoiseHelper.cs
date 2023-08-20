@@ -38,14 +38,13 @@ public static class NoiseHelper
 					for (int i = 0; i < heightMapData.noiseLayers.Length; i++)
 					{
 						NoiseLayer noiseConfig = new NoiseLayer(heightMapData.noiseLayers[i].enabled, heightMapData.noiseLayers[i].noiseFunction,
-							heightMapData.noiseLayers[i].noiseScale, 1, heightMapData.noiseLayers[i].persistance, heightMapData.noiseLayers[i].lacunarity, heightMapData.noiseLayers[i].gain,
-							heightMapData.noiseLayers[i].heightScalar);
+							heightMapData.noiseLayers[i].noiseScale, 1, heightMapData.noiseLayers[i].persistance, heightMapData.noiseLayers[i].lacunarity, heightMapData.noiseLayers[i].gain);
 						if (!noiseConfig.enabled){
 							continue;
 						}
 
 						float NoiseHeight = GetNoiseValue(sampleX, sampleY, noiseConfig, noiseOctaves[i], noiseConfig.noiseFunction);
-						heightSum += NoiseHeight * noiseConfig.heightScalar;
+						heightSum += NoiseHeight; // * noiseConfig.heightScalar;
 					}
 				}
 				else
@@ -58,7 +57,7 @@ public static class NoiseHelper
 						}
 
 						float noiseHeight = GetNoiseValue(sampleX, sampleY, noiseConfig, noiseOctaves[i], noiseConfig.noiseFunction);
-						heightSum += noiseHeight * noiseConfig.heightScalar;
+						heightSum += noiseHeight; // * noiseConfig.heightScalar;
 					}
 				}
 				noiseMap[x, y] = heightSum;
@@ -92,7 +91,7 @@ public static class NoiseHelper
 			float offsetSampleX = (sampleX + octaveData.OctaveOffsets[o].x) / noiseConfig.noiseScale * frequency;
 			float offsetSampleY = (sampleY + octaveData.OctaveOffsets[o].y) / noiseConfig.noiseScale * frequency;
 
-			float noiseValue = Mathf.PerlinNoise(offsetSampleX, offsetSampleY) * 2 - 1;
+			float noiseValue = Mathf.PerlinNoise(offsetSampleX, offsetSampleY); // * 2 - 1;
 			perlinValue += noiseValue * amplitude;
 
 			amplitude *= noiseConfig.persistance;

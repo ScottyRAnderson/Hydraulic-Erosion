@@ -14,8 +14,8 @@ public class HydraulicData : ScriptableObject
 
     [Space]
 
-    [SerializeField][Range(0f, 1f)][Tooltip("The initial intertia given to each droplet. Higher values will send droplets farther from their origins")]
-    private float intertia;
+    [SerializeField][Range(0f, 1f)][Tooltip("The initial inertia given to each droplet. Higher values will send droplets farther from their origins")]
+    private float inertia;
     [SerializeField][Tooltip("Determines the amount of sediment a droplet can carry")]
     private float carryCapacity;
     [SerializeField][Range(0f, 1f)][Tooltip("Limits the amount of sediment dropped if the carry capacity of a droplet is exceeded")]
@@ -32,7 +32,7 @@ public class HydraulicData : ScriptableObject
     public int DropletCount { get { return dropletCount; } }
     public int MaxSteps { get { return maxSteps; } }
     public float Gravity { get { return gravity; } }
-    public float Intertia { get { return intertia; } }
+    public float Inertia { get { return inertia; } }
     public float CarryCapacity { get { return carryCapacity; } }
     public float DepositionRate { get { return depositionRate; } }
     public float ErosionRate { get { return erosionRate; } }

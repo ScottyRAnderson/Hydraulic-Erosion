@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2b140c130e10bf409428ee62a21fe65, type: 3}
   m_Name: HeightMapData
   m_EditorClassIdentifier: 
+  heightScalar: 10
   NoiseLayers:
   - Enabled: 1
     NoiseFunction: 0
@@ -20,4 +21,3 @@ MonoBehaviour:
     Persistance: 0.2
     Lacunarity: 3
     Gain: 1
-    HeightScalar: 5
