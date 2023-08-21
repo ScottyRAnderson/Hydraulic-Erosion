@@ -19,5 +19,5 @@ MonoBehaviour:
     NoiseScale: 12
     Octaves: 6
     Persistance: 0.2
-    Lacunarity: 3
+    Lacunarity: 3.5
     Gain: 1

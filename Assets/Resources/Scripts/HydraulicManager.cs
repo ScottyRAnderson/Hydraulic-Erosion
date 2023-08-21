@@ -5,8 +5,9 @@ using UnityEngine;
 public class HydraulicManager : MonoBehaviour
 {
     private const int baseMapDensityDivisor = 8; // Must be divisible by 4
-    private const int MapPreviewComputeScale = 50;
-    private const int MapPreviewRenderScale = 150;
+    private const int mapPreviewComputeScale = 50;
+    private const int mapPreviewRenderScale = 150;
+    public const UnityEngine.Rendering.IndexFormat indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
 
     public enum HeightMapPreviewMode
     {
@@ -18,7 +19,7 @@ public class HydraulicManager : MonoBehaviour
     private int seed;
     [SerializeField]
     private MapSize mapSize = MapSize._256;
-    [SerializeField][Range(1, 100)]
+    [SerializeField][Range(1, 500)]
     private int mapDensity;
     [SerializeField]
     private bool debugEditorInstance;
@@ -56,14 +57,14 @@ public class HydraulicManager : MonoBehaviour
     public int NumVertsPerLine { get { return (int)((float)mapSize / baseMapDensityDivisor) * mapDensity; } }
     public float VertexSpacing { 
         get {
-            float spacing = ((float)mapSize / NumVertsPerLine);
+            float spacing = (float)mapSize / NumVertsPerLine;
             return spacing + ((spacing / NumVertsPerLine) * (1 - mapDensity)); 
         } 
     }
     public Vector3 MapOffset { get { return new Vector3(-(float)mapSize / 2, 0, -(float)mapSize / 2) + transform.position; } }
 
     #if UNITY_EDITOR
-    public void OnValidate(){
+    public void OnValidate() {
         UnityEditor.EditorApplication.update += NotifyOfUpdatedValues;
     }
 
@@ -75,46 +76,27 @@ public class HydraulicManager : MonoBehaviour
 
     private void OnValuesUpdated()
     {
-        if(heightMapData != null)
+        if (heightMapData != null)
         {
             heightMapData.onValuesUpdated -= OnValuesUpdated;
             heightMapData.onValuesUpdated += OnValuesUpdated;
             UpdateHeightMapPreview();
         }
         UpdateEditorInstanceFlags();
-
         gizmoScale = Mathf.Max(gizmoScale, 0f);
     }
     #endif
 
     private HeightMap GenerateErosionMap(HeightMap heightMap)
     {
-        int numVerts = heightMap.mapScale;
-        float spacing = VertexSpacing;
-        Vector3 offset = MapOffset;
-
         // Generate random droplet starting positions across the map
         Vector2[] dropletPositions = new Vector2[hydraulicData.DropletCount];
         System.Random RNG = new System.Random(seed);
         for (int i = 0; i < dropletPositions.Length; i++) {
-            float x = RNG.Next(0, numVerts - 1);
-            float y = RNG.Next(0, numVerts - 1);
-            //dropletPositions[i] = new Vector2((float)x * spacing, (float)y * spacing) + new Vector2(offset.x, offset.z);
+            float x = RNG.Next(0, heightMap.mapScale - 1);
+            float y = RNG.Next(0, heightMap.mapScale - 1);
             dropletPositions[i] = new Vector2(x, y);
         }
-
-        //Vector2[] gridPositions = new Vector2[numVerts * numVerts];
-        //int gridIndex = 0;
-        //for (int x = 0; x < numVerts; x++)
-        //{
-        //    for (int y = 0; y < numVerts; y++)
-        //    {
-        //        float height = heightMap.heightValues[x, y];
-        //        gridPositions[gridIndex] = new Vector3((float)x * spacing, height, (float)y * spacing) + offset;
-        //        gridIndex++;
-        //    }
-        //}
-
         return HydraulicHelper.GenerateErosionMap(heightMap, dropletPositions, hydraulicData);
     }
 
@@ -124,7 +106,7 @@ public class HydraulicManager : MonoBehaviour
 
     private Texture2D GenerateHeightMapSampleTexture()
     {
-        HeightMap HeightMap = HydraulicHelper.GenerateTerrainHeightMap(MapPreviewComputeScale, heightMapData, heightMapPreviewMode, heightMapPreviewSeed);
+        HeightMap HeightMap = HydraulicHelper.GenerateTerrainHeightMap(mapPreviewComputeScale, heightMapData, heightMapPreviewMode, heightMapPreviewSeed);
         return HydraulicHelper.TextureFromHeightMap(HeightMap);
     }
 
@@ -134,7 +116,7 @@ public class HydraulicManager : MonoBehaviour
             return;
         }
         heightMapPreview = GenerateHeightMapSampleTexture();
-        heightMapPreview = HydraulicHelper.ResizeTexture(heightMapPreview, MapPreviewRenderScale, MapPreviewRenderScale);
+        heightMapPreview = HydraulicHelper.ResizeTexture(heightMapPreview, mapPreviewRenderScale, mapPreviewRenderScale);
     }
 
     private Mesh GenerateTerrainMesh(int seed = 0)
@@ -176,6 +158,7 @@ public class HydraulicManager : MonoBehaviour
         }
 
         Mesh mesh = new Mesh();
+        mesh.indexFormat = indexFormat;
         mesh.vertices = vertices;
         mesh.triangles = triangles;
         mesh.uv = uv;
@@ -188,7 +171,7 @@ public class HydraulicManager : MonoBehaviour
     public void CreateEditorInstance()
     {
         DestroyEditorInstance();
-        editorInstance = new GameObject("EditorInstance_IDENTIFIER[230543]");
+        editorInstance = new GameObject("EditorInstance_IDENTIFIER["+gameObject.GetHashCode()+"]");
         editorInstance.transform.SetParent(transform);
         UpdateEditorInstanceFlags();
 
@@ -210,7 +193,11 @@ public class HydraulicManager : MonoBehaviour
     private void DestroyEditorInstance()
     {
         if (editorInstance == null) {
-            editorInstance = GameObject.Find("EditorInstance_IDENTIFIER[230543]");
+            editorInstance = GameObject.Find("EditorInstance_IDENTIFIER["+gameObject.GetHashCode()+"]");
+        }
+
+        for (int i = 0; i < transform.childCount; i++) {
+            DestroyImmediate(transform.GetChild(i).gameObject);
         }
 
         if (editorInstance != null)

@@ -88,7 +88,7 @@ public class HydraulicManager_Inspector : Editor
 
             GUI.enabled = false;
             int numVerts = (int)Mathf.Pow(managerBase.NumVertsPerLine, 2);
-            bool vertexLimitReached = numVerts > 65535;
+            bool vertexLimitReached = HydraulicManager.indexFormat == UnityEngine.Rendering.IndexFormat.UInt16 && numVerts > 65535;
             EditorGUILayout.LabelField("Vertex Count: " + Mathf.Pow(managerBase.NumVertsPerLine, 2), EditorStyles.boldLabel);
             GUI.enabled = true;
 

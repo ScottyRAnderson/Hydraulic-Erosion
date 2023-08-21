@@ -13,10 +13,11 @@ public static class NoiseHelper
 		for (int i = 0; i < heightMapData.noiseLayers.Length; i++)
 		{
 			NoiseLayer noiseConfig = heightMapData.noiseLayers[i];
-			noiseOctaves[i] = new NoiseOctave();
-			noiseOctaves[i].OctaveOffsets = new Vector2[noiseConfig.octaves];
+            noiseOctaves[i] = new NoiseOctave {
+                OctaveOffsets = new Vector2[noiseConfig.octaves]
+            };
 
-			float amplitude = 1;
+            float amplitude = 1;
 			for (int o = 0; o < noiseConfig.octaves; o++)
 			{
 				float offsetX = RNG.Next(-100000, 100000);

@@ -13,3 +13,12 @@ MonoBehaviour:
   m_Name: ShadingData
   m_EditorClassIdentifier: 
   meshMaterial: {fileID: 2100000, guid: 19a4f9cb49b103c44972ea37e06646c6, type: 2}
+  smoothness: 0.2
+  metallic: 0
+  flatColor: {r: 0.35440508, g: 0.3764706, b: 0.13725492, a: 1}
+  steepColor: {r: 0.3773585, g: 0.3318965, b: 0.29725882, a: 1}
+  steepnessThreshold: 0.08
+  colorBlend: 0.1
+  rimFactor: 0.15
+  rimPower: 1.56
+  rimColor: {r: 1, g: 0.8594127, b: 0.6556604, a: 1}

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using UnityEngine;
 
 public static class HydraulicHelper
@@ -29,23 +30,10 @@ public static class HydraulicHelper
                 Vector2Int p10 = p00 + new Vector2Int(1, 0);
                 Vector2Int p01 = p00 + new Vector2Int(0, 1);
                 Vector2Int p11 = p00 + new Vector2Int(1, 1);
-				
-				float h00 = heightMap.heightValues[p00.x, p00.y]; // NW
-                float h10 = heightMap.heightValues[p10.x, p10.y]; // NE
-                float h01 = heightMap.heightValues[p01.x, p01.y]; // SW
-                float h11 = heightMap.heightValues[p11.x, p11.y]; // SE
 
-				// Bilinear interpolation to get height based gradient
-                float gx = (h10 - h00) * (1 - cellOffsetY) + (h11 - h01) * cellOffsetY;
-                float gy = (h01 - h00) * (1 - cellOffsetX) + (h11 - h10) * cellOffsetX;
-
-                Vector2 g = new Vector2(gx, gy);
-
-                // Bilinear interpolation to get height of point on map
-                float height = h00 * (1 - cellOffsetX) * (1 - cellOffsetY)
-                                + h10 * cellOffsetX * (1 - cellOffsetY)
-                                + h01 * (1 - cellOffsetX) * cellOffsetY
-                                + h11 * cellOffsetX * cellOffsetY;
+                Vector3 gh = GetMapGradientHeightData(heightMap, particle.pos);
+                Vector2 g = new Vector2(gh.x, gh.y);
+                float h = gh.z;
 
                 // Step 2: Compute the droplets new direction based on the gradient
                 Vector2 dir = particle.dir * data.Inertia - g * (1 - data.Inertia);
@@ -57,43 +45,19 @@ public static class HydraulicHelper
 
                 // Step 3: Compute the droplets new position based on it's direction
 				particle.pos += particle.dir;
-				nodeX = (int)particle.pos.x;
-				nodeY = (int)particle.pos.y;
 
                 // If the particle is outside of the map, move onto the next particle
-                if (nodeX < 0 || nodeY < 0 || nodeX >= mapScale - 1 || nodeY >= mapScale - 1) {
+                if (!ValidPos((int)particle.pos.x, (int)particle.pos.y, mapScale)) {
                     break;
                 }
-
-                //cellOffsetX = particle.pos.x - nodeX;
-                //cellOffsetY = particle.pos.y - nodeY;
-
-                //p00 = new Vector2Int(nodeX, nodeY);
-                //p01 = p00 + new Vector2Int(0, 1);
-                //p10 = p00 + new Vector2Int(1, 0);
-                //p11 = p00 + new Vector2Int(1, 1);
-
-                float offsetX = particle.pos.x - nodeX;
-                float offsetY = particle.pos.y - nodeY;
-                Vector2Int P00 = new Vector2Int(nodeX, nodeY);
-                Vector2Int P10 = P00 + new Vector2Int(1, 0);
-                Vector2Int P01 = P00 + new Vector2Int(0, 1);
-                Vector2Int P11 = P00 + new Vector2Int(1, 1);
-                h00 = heightMap.heightValues[P00.x, P00.y];
-                h10 = heightMap.heightValues[P10.x, P10.y];
-                h01 = heightMap.heightValues[P01.x, P01.y];
-                h11 = heightMap.heightValues[P11.x, P11.y];
 
                 /// Step 4: Height difference between the droplets old and new position is computed
                 /// This is used to determine if the drop moved up or down,
                 /// If the droplet moved up, deposit sediment at the droplets old position into the pit it supposedly ran through. (If the drop carries enough sediment, it fills the pit, otherwise it drops all sediment)
                 /// If the droplet moved down, the droplets carry capacity is calculated by the height difference, velocity, water content and capacity parameter.
                 /// c = max(-Hdif, PminSlope) * velocity * waterContent * Pcapacity;
-                float h = h00 * (1 - offsetX) * (1 - offsetY)
-                            + h10 * offsetX * (1 - offsetY)
-                            + h01 * (1 - offsetX) * offsetY
-                            + h11 * offsetX * offsetY;
-                float hDiff = h - height;
+                gh = GetMapGradientHeightData(heightMap, particle.pos);
+                float hDiff = gh.z - h;
 
                 // Calculate new carry capacity
                 particle.carryCapacity = Mathf.Max(-hDiff, data.MinSlope) * particle.velocity * particle.waterContent * data.CarryCapacity;
@@ -121,23 +85,19 @@ public static class HydraulicHelper
                     float erodedMaterial = Mathf.Min((particle.carryCapacity - particle.sedimentContent) * data.ErosionRate, -hDiff);
 					particle.sedimentContent += erodedMaterial;
 
-                    //heightMap.heightValues[p00.x, p00.y] -= erodedMaterial / 4;
-                    //heightMap.heightValues[p10.x, p10.y] -= erodedMaterial / 4;
-                    //heightMap.heightValues[p01.x, p01.y] -= erodedMaterial / 4;
-                    //heightMap.heightValues[p11.x, p11.y] -= erodedMaterial / 4;
-
-                    /* 
                     // Update affected grid points within Pradius
                     List<Vector2Int> erosionPoints = new List<Vector2Int>();
                     List<float> erosionWeights = new List<float>();
                     float weightSum = 0f;
-                    for (int x = 0; x < mapScale; x++)
+
+                    int radius = data.ErosionRadius;
+                    for (int x = p00.x - radius; x < p00.x + 2 + radius; x++)
                     {
-                        for (int y = 0; y < mapScale; y++)
+                        for (int y = p00.y - radius; y < p00.y + 2 + radius; y++)
                         {
                             Vector2Int point = new Vector2Int(x, y);
                             float dist = Vector2.Distance(particle.pos, point);
-                            if (dist < data.ErosionRadius) {
+                            if (ValidPos(point.x, point.y, mapScale) && dist < data.ErosionRadius) {
                                 erosionPoints.Add(point);
 
                                 // Compute point distance weight
@@ -154,7 +114,6 @@ public static class HydraulicHelper
                         float weight = erosionWeights[p] / weightSum; // If an erosion factor is required, it should be applied here
                         heightMap.heightValues[point.x, point.y] -= erodedMaterial * weight;
                     }
-                    */
                 }
 
                 // Step 7: Compute the droplets new velocity and water content
@@ -162,12 +121,58 @@ public static class HydraulicHelper
 				particle.waterContent *= 1 - data.ErosionRate;
 
                 // Step 8: Repeat steps 1 - 7 until the droplet moves out of the map or dies in a pit. A maximum step count should also be specified.
-
-                // Step 9: If sediment is taken from the map and added to the droplet, all map points within Pradius are taken into account. (Pradius determines the area in which the drop erodes terrain)
             }
         }
 
         return heightMap;
+    }
+
+    /// <summary>
+    /// Computes the bilinear computed gradient and height at a given particle position on a heightmap.
+    /// </summary>
+    /// <param name="heightMap"></param>
+    /// <param name="pos"></param>
+    /// <returns>
+    /// A vector containing: 
+    /// <list type="bullet">
+    /// <item><description>x: gradient (dx)</description></item>
+    /// <item><description>y: gradient (dy)</description></item>
+    /// <item><description>z: height</description></item>
+    /// </list>
+    /// </returns>
+    public static Vector3 GetMapGradientHeightData(HeightMap heightMap, Vector2 pos) {
+        // Retrieve position of particle on node grid
+        int nodeX = (int)pos.x;
+        int nodeY = (int)pos.y;
+
+        // Calculate droplet offset within the cell, (0,0) = at NW node, (1,1) = at SE node
+        float cellOffsetX = pos.x - nodeX;
+        float cellOffsetY = pos.y - nodeY;
+
+        // Step 1: Compute bilinear interpolated gradient
+        Vector2Int p00 = new Vector2Int(nodeX, nodeY);
+        Vector2Int p10 = p00 + new Vector2Int(1, 0);
+        Vector2Int p01 = p00 + new Vector2Int(0, 1);
+        Vector2Int p11 = p00 + new Vector2Int(1, 1);
+
+        float h00 = heightMap.heightValues[p00.x, p00.y];
+        float h10 = heightMap.heightValues[p10.x, p10.y];
+        float h01 = heightMap.heightValues[p01.x, p01.y];
+        float h11 = heightMap.heightValues[p11.x, p11.y];
+
+        // Bilinear interpolation to get height based gradient
+        float gx = (h10 - h00) * (1 - cellOffsetY) + (h11 - h01) * cellOffsetY;
+        float gy = (h01 - h00) * (1 - cellOffsetX) + (h11 - h10) * cellOffsetX;
+
+        // Bilinear interpolation to get height of point on map
+        float height = h00 * (1 - cellOffsetX) * (1 - cellOffsetY) + h10 * cellOffsetX * (1 - cellOffsetY) + h01 * (1 - cellOffsetX) * cellOffsetY + h11 * cellOffsetX * cellOffsetY;
+
+        // Pack results into vector
+        return new Vector3(gx, gy, height);
+    }
+
+    public static bool ValidPos(int x, int y, int scale) {
+        return x >= 0 && y >= 0 && x < scale - 1 && y < scale - 1;
     }
 
     public static HeightMap GenerateTerrainHeightMap(int vertsPerLine, float vertexSpacing, MapSize mapSize, HeightMapData HeightMapSettings, int Seed = 0)

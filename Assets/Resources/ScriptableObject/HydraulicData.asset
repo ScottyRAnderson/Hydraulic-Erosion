@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dropletCount: 70000
   maxSteps: 30
-  gravity: 9.8
-  inertia: 0.05
-  carryCapacity: 4
+  gravity: 15
+  inertia: 0.7
+  carryCapacity: 25
   depositionRate: 0.3
   erosionRate: 0.3
   evaporationRate: 0.01
-  erosionRadius: 3
+  erosionRadius: 8
   minSlope: 0
